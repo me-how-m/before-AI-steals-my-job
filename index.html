@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Before AI steals my job…</title>
+  <meta name="description" content="An anonymous wall of things people want to do before AI steals their job. Leave yours." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Reenie+Beanie&family=Caveat:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="backdrop" aria-hidden="true">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+      <div class="blob blob-d"></div>
+      <div class="grain"></div>
+    </div>
+
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">
+        <strong id="brand-count">124,583</strong> things people want to do before AI steals their job
+      </span>
+    </div>
+
+    <div class="floaters" id="floaters"></div>
+
+    <div class="center">
+      <div class="composer" id="composer">
+        <button class="composer-toggle" id="composer-toggle" aria-label="Collapse">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <button class="composer-collapsed-hint" id="composer-hint" hidden>
+          <span class="hint-prompt">Before AI steals my job…</span>
+        </button>
+        <form class="composer-body" id="composer-form">
+          <div class="composer-prompt">
+            <span class="prompt-line">Before AI steals my job…</span>
+          </div>
+          <textarea
+            class="composer-input"
+            id="composer-input"
+            placeholder="write the thing you've been putting off"
+            rows="3"
+            maxlength="240"></textarea>
+          <div class="composer-foot">
+            <span class="composer-count" id="composer-count">0/240</span>
+            <button type="submit" class="composer-submit" id="composer-submit" disabled>
+              <span>leave it here</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sign + email two-step modal -->
+    <div class="modal-scrim" id="sign-scrim" hidden>
+      <div class="modal" id="sign-modal">
+        <button class="modal-close" id="sign-close" aria-label="close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <div class="modal-preview">
+          <span class="modal-preview-label">your note</span>
+          <p class="modal-preview-text" id="sign-preview"></p>
+        </div>
+        <div class="modal-progress">
+          <span class="pip on" id="pip-0"></span>
+          <span class="pip" id="pip-1"></span>
+        </div>
+        <div class="modal-step" id="sign-step-0">
+          <h2 class="modal-title">Would you like to sign it?</h2>
+          <p class="modal-sub">A name, an initial, a pseudonym — or leave it anonymous.</p>
+          <div class="choice-row">
+            <button type="button" class="choice" id="choice-sign">
+              <span class="choice-title">Sign it</span>
+              <span class="choice-sub">e.g. Plato, M., your name</span>
+            </button>
+            <button type="button" class="choice" id="choice-anon">
+              <span class="choice-title">Anonymous</span>
+              <span class="choice-sub">just the words</span>
+            </button>
+          </div>
+          <input class="modal-input" id="sign-name" placeholder="how should it be signed?" maxlength="32" hidden />
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="sign-cancel">cancel</button>
+            <button type="button" class="btn-primary" id="sign-continue" disabled>continue</button>
+          </div>
+        </div>
+        <div class="modal-step" id="sign-step-1" hidden>
+          <h2 class="modal-title">Want to leave an email?</h2>
+          <p class="modal-sub">
+            Only used to send you a removal link, and — if you want — to let you see how
+            people interact with your note later. We won't email you for anything else.
+          </p>
+          <div class="choice-row">
+            <button type="button" class="choice" id="choice-email">
+              <span class="choice-title">Leave an email</span>
+              <span class="choice-sub">removal link + future replies</span>
+            </button>
+            <button type="button" class="choice" id="choice-skip">
+              <span class="choice-title">No, post it as is</span>
+              <span class="choice-sub">no follow-up</span>
+            </button>
+          </div>
+          <input class="modal-input" id="sign-email" placeholder="you@somewhere" type="email" hidden />
+          <div class="modal-actions">
+            <button type="button" class="btn-ghost" id="sign-back">back</button>
+            <button type="button" class="btn-primary" id="sign-post" disabled>post it</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expanded note detail -->
+    <div class="detail-scrim" id="detail-scrim" hidden>
+      <div class="detail" id="detail">
+        <button class="detail-close" id="detail-close" aria-label="close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <div class="detail-prompt">Before AI steals my job…</div>
+        <p class="detail-text" id="detail-text"></p>
+        <div class="detail-meta">
+          <span class="detail-author" id="detail-author"></span>
+          <span class="detail-dot">·</span>
+          <span class="detail-time" id="detail-time"></span>
+        </div>
+        <div class="detail-actions">
+          <button class="act" id="act-plus" title="me too">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="act-count" id="act-plus-count">+0</span>
+          </button>
+          <button class="act" id="act-copy" title="copy">
+            <span id="act-copy-inner">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+              <span class="act-count">copy</span>
+            </span>
+          </button>
+          <button class="act is-disabled" disabled title="reply (soon)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+            <span class="act-count">reply</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="modal-scrim" id="disclaimer-scrim" hidden>
+      <div class="modal modal--small" id="disclaimer-modal">
+        <button class="modal-close" id="disclaimer-close" aria-label="close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h2 class="modal-title">Disclaimer</h2>
+        <p class="modal-sub">It's an AI experiment done with Claude.</p>
+        <div class="modal-actions">
+          <button class="btn-primary" id="disclaimer-ok">okay</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <footer class="footer">
+      <button class="footer-link" id="disclaimer-open">Disclaimer</button>
+      <span class="footer-dot">·</span>
+      <a class="footer-link" href="mailto:tester@beforeaistealsmyjob.com">Contact</a>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
