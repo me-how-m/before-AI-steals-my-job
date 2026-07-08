@@ -1,0 +1,18 @@
+{
+  "name": "before-ai-steals-my-job",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Anonymous wall of things people want to do before AI steals their job.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  },
+  "scripts": {
+    "gen-secrets": "node scripts/generate-secrets.mjs",
+    "init-db": "node scripts/init-db.mjs",
+    "smoke": "node scripts/smoke-test.mjs"
+  }
+}

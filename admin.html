@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin — Before AI steals my job…</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <!-- Login -->
+  <div id="login-view" class="login-view">
+    <form id="login-form" class="login-card">
+      <h1>Admin</h1>
+      <p class="login-hint">Passphrase + authenticator code.</p>
+      <input id="login-password" type="password" autocomplete="current-password" placeholder="passphrase" />
+      <input id="login-totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" />
+      <button type="submit" id="login-btn">Sign in</button>
+      <p id="login-error" class="login-error" hidden></p>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dash-view" class="dash" hidden>
+    <header class="dash-header">
+      <h1>Before AI steals my job… <span>admin</span></h1>
+      <button id="logout" class="btn">Log out</button>
+    </header>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <input id="search" class="input" placeholder="search text or author…" />
+        <select id="filter-status" class="input">
+          <option value="">all statuses</option>
+          <option value="visible">visible</option>
+          <option value="hidden">hidden</option>
+          <option value="removed">removed</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="exports">
+          <span class="exports-label">export</span>
+          <a class="btn btn-sm" id="export-json">JSON</a>
+          <a class="btn btn-sm" id="export-csv">CSV</a>
+          <a class="btn btn-sm" id="export-txt">TXT</a>
+          <label class="chk"><input type="checkbox" id="export-email" /> include emails</label>
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table class="notes-table">
+          <thead>
+            <tr><th>when</th><th>note</th><th>author</th><th>+</th><th>email</th><th>status</th><th>actions</th></tr>
+          </thead>
+          <tbody id="notes-body"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="pager"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Feedback inbox</h2>
+      <div id="feedback-list" class="feedback-list"></div>
+    </section>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

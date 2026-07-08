@@ -49,22 +49,29 @@ const SAMPLE_NOTES = [
   { id: 'n46', text: "I want to walk into an interview totally unprepared and get the job purely on charm",                     author: "Liv",     hours: 720,  plus: 514 },
 ];
 
+// SAMPLE_NOTES is the offline FALLBACK. When /api/wall returns real notes,
+// app.js rebuilds the rows from those instead. See buildRows() below.
+const FALLBACK_NOTES = SAMPLE_NOTES;
+
 // 10 rows, centered vertically. dyPx = pixel offset from viewport vertical center.
 // Vertical: row stride between rows (top-to-top distance) = 24px gap + 44px floater height.
 const ROW_STRIDE = 24 + 44;
-const ROWS = (() => {
+
+// Build the 10-row drift layout from any array of notes (each needs an `id`).
+function buildRows(notes) {
   const out = [];
   const offsets = [-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5];
-  const noteIds = SAMPLE_NOTES.map(n => n.id);
+  const speeds = [220, 240, 200, 260, 210, 230, 190, 250, 215, 245];
+  const noteIds = (notes && notes.length ? notes : FALLBACK_NOTES).map((n) => n.id);
   offsets.forEach((u, i) => {
-    const dyPx = u * ROW_STRIDE;
     const dir = (i % 2 === 0) ? 1 : -1;
-    const speeds = [220, 240, 200, 260, 210, 230, 190, 250, 215, 245];
-    const speed = speeds[i];
     const start = (i * 4) % noteIds.length;
     const ids = [];
     for (let j = 0; j < 4; j++) ids.push(noteIds[(start + j) % noteIds.length]);
-    out.push({ dyPx, dir, speed, notes: ids });
+    out.push({ dyPx: u * ROW_STRIDE, dir, speed: speeds[i], notes: ids });
   });
   return out;
-})();
+}
+
+// Initial layout uses the fallback; replaced once the API responds.
+let ROWS = buildRows(FALLBACK_NOTES);

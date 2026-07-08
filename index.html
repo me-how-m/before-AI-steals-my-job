@@ -108,6 +108,7 @@
             </button>
           </div>
           <input class="modal-input" id="sign-email" placeholder="you@somewhere" type="email" hidden />
+          <div class="ts-slot" id="sign-turnstile"></div>
           <div class="modal-actions">
             <button type="button" class="btn-ghost" id="sign-back">back</button>
             <button type="button" class="btn-primary" id="sign-post" disabled>post it</button>
@@ -162,7 +163,56 @@
       </div>
     </div>
 
+    <!-- Removal-link modal (shown after posting) -->
+    <div class="modal-scrim" id="removal-scrim" hidden>
+      <div class="modal modal--small" id="removal-modal">
+        <button class="modal-close" id="removal-close" aria-label="close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h2 class="modal-title">It's up there now</h2>
+        <p class="modal-sub"><span id="removal-emailed"></span></p>
+        <input class="modal-input" id="removal-link" readonly />
+        <div class="modal-actions">
+          <button class="btn-ghost" id="removal-copy">copy link</button>
+          <button class="btn-primary" id="removal-ok">done</button>
+        </div>
+      </div>
+    </div>
+
     <div class="toast" id="toast" hidden></div>
+
+    <!-- Trending widget (top-right) -->
+    <div class="tw" id="trending-widget" hidden>
+      <button class="tw-toggle" id="tw-toggle" aria-expanded="false">
+        <span class="tw-spark">✦</span><span>trending</span>
+      </button>
+      <div class="tw-panel" id="tw-panel" hidden>
+        <div class="tw-tabs">
+          <button type="button" class="tw-tab is-on" data-tab="trending">Trending</button>
+          <button type="button" class="tw-tab" data-tab="top">Top 10</button>
+          <button type="button" class="tw-tab" data-tab="recent">Recent</button>
+        </div>
+        <ol class="tw-list" id="tw-list"></ol>
+      </div>
+    </div>
+
+    <!-- Feedback widget (bottom-right) -->
+    <div class="fw" id="feedback-widget">
+      <div class="fw-pop" id="fw-pop" hidden>
+        <button class="fw-close" id="fw-close" aria-label="close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+        <h3 class="fw-title">Feedback &amp; requests</h3>
+        <p class="fw-sub">Found a bug, want a feature, or just want to say something? Tell me.</p>
+        <textarea class="fw-text" id="fw-text" rows="4" maxlength="1000" placeholder="your message"></textarea>
+        <input class="fw-email" id="fw-email" type="email" placeholder="email (optional, for a reply)" />
+        <div class="ts-slot" id="fw-turnstile"></div>
+        <button class="fw-send" id="fw-send" disabled>send</button>
+      </div>
+      <button class="fw-btn" id="fw-btn" aria-label="Send feedback">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+    </div>
 
     <footer class="footer">
       <button class="footer-link" id="disclaimer-open">Disclaimer</button>
@@ -171,6 +221,7 @@
     </footer>
   </div>
 
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="data.js"></script>
   <script src="app.js"></script>
 </body>
