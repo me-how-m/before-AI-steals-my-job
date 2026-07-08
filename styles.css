@@ -939,8 +939,8 @@ body {
   .fw { bottom: 14px; right: 14px; }
   .fw-pop { position: fixed; left: 10px; right: 10px; bottom: 74px; width: auto; max-width: none; }
 
-  /* Footer moves left so it clears the feedback button */
-  .footer { left: 14px; right: auto; bottom: 16px; }
+  /* Footer moves left and wraps within the space left of the feedback button */
+  .footer { left: 14px; right: auto; bottom: 16px; flex-wrap: wrap; max-width: calc(100vw - 76px); row-gap: 2px; }
 
   /* Modals anchor to the top and scroll if taller than the screen */
   .modal-scrim, .detail-scrim { align-items: flex-start; padding: 16px; }

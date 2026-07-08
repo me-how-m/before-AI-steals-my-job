@@ -8,6 +8,7 @@ import { verifyTurnstile } from '../lib/turnstile.js';
 import { rateLimit, hashIp } from '../lib/ratelimit.js';
 import { getBody, clientIp, siteUrl } from '../lib/http.js';
 import { sendRemovalEmail } from '../lib/email.js';
+import { moderate } from '../lib/moderation.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'method-not-allowed' });
@@ -16,6 +17,10 @@ export default async function handler(req, res) {
   const text = String(body.text || '').trim();
   if (!text) return res.status(400).json({ error: 'empty' });
   if (text.length > 240) return res.status(400).json({ error: 'too-long' });
+
+  // Reject PII / blocklisted content before anything else touches it.
+  const mod = moderate(text);
+  if (!mod.ok) return res.status(422).json({ error: 'blocked', reason: mod.reason });
 
   const ip = clientIp(req);
 

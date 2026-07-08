@@ -15,6 +15,7 @@ import {
   base32Encode, base32Decode, hashPassword, encryptEmail, decryptEmail,
   signToken, verifyToken, verifyPassword, verifyTOTP, createSession, verifySession,
 } from '../lib/crypto.js';
+import { moderate } from '../lib/moderation.js';
 
 // ---- environment (must be set before importing handlers) ----
 const dbPath = join(os.tmpdir(), `smoke-${crypto.randomBytes(4).toString('hex')}.db`);
@@ -88,9 +89,19 @@ const badTotp = totpNow(TOTP_SECRET) === '000000' ? '000001' : '000000';
 ok('TOTP rejects bad code', verifyTOTP(badTotp) === false);
 ok('session create/verify', verifySession(createSession()) === true);
 
+console.log('\nmoderation');
+ok('clean note passes', moderate('I want to retire before the bots do').ok === true);
+ok('blocks email in text', moderate('reach me at me@x.com').ok === false);
+ok('blocks phone in text', moderate('call me 415-555-2671').ok === false);
+ok('blocks Luhn-valid card', moderate('my card 4111 1111 1111 1111').ok === false);
+ok('does not block ordinary numbers', moderate('40 years, 401k, room 237').ok === true);
+
 console.log('\npublic API');
 let r = await call(wall);
 ok('wall configured, empty', r.body.configured === true && r.body.wall.length === 0);
+
+r = await call(notes, { method: 'POST', body: { text: 'email me at a@b.com please' } });
+ok('post rejects PII with 422', r.statusCode === 422 && !!r.body.reason);
 
 r = await call(notes, { method: 'POST', body: { text: 'ship one last thing', author: 'MM', email: 'me@x.com' } });
 const idA = r.body.id;

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy — Before AI steals my job…</title>
+  <style>
+    :root { --ink:#1f1a17; --ink2:#3a322d; --mute:rgba(31,26,23,.62); --line:rgba(31,26,23,.14); }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; background:linear-gradient(135deg,#ffd9b8,#f4d4ff); color:var(--ink);
+      font-family:'Inter',system-ui,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; padding:40px 20px; }
+    .wrap { max-width:680px; margin:0 auto; background:#fdf6ee; border-radius:22px; padding:40px 40px 32px;
+      box-shadow:0 40px 80px -20px rgba(60,30,10,.3); }
+    h1 { font-family:'Cormorant Garamond',Georgia,serif; font-style:italic; font-weight:500; font-size:38px; margin:0 0 4px; }
+    .updated { color:var(--mute); font-size:13px; margin:0 0 24px; }
+    h2 { font-size:16px; margin:26px 0 8px; }
+    p, li { font-size:14px; line-height:1.65; color:var(--ink2); }
+    ul { padding-left:20px; }
+    a { color:var(--ink); }
+    .back { display:inline-block; margin-top:28px; font-size:14px; }
+    strong { color:var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Privacy</h1>
+    <p class="updated">Last updated: 7 July 2026</p>
+
+    <p><em>Before AI steals my job…</em> is an anonymous wall of short notes. It's an art/AI experiment. This page explains what it stores and your choices. We keep the data we hold to the minimum needed to run it.</p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li><strong>Your note</strong> and, if you add one, an <strong>author name</strong> — these are public by design.</li>
+      <li><strong>Your email, only if you choose to leave one</strong> — stored <strong>encrypted</strong> and used solely to send you your note's removal link (and, if offered, to let you see how people interacted with your note). We don't email you for anything else and never sell or share it.</li>
+      <li><strong>Anti-spam data</strong> — a salted, one-way hash of your IP address (never the raw IP) to rate-limit abuse. These hashes are automatically deleted after 30 days.</li>
+    </ul>
+    <p>No advertising, no tracking cookies, no analytics profiles.</p>
+
+    <h2>Third parties</h2>
+    <ul>
+      <li><strong>Cloudflare Turnstile</strong> — a privacy-respecting anti-bot check on the post form.</li>
+      <li><strong>Google Fonts</strong> — used to load the typefaces.</li>
+      <li><strong>Vercel</strong> (hosting) and <strong>Turso</strong> (database) process the data on our behalf.</li>
+    </ul>
+
+    <h2>Your choices &amp; rights</h2>
+    <ul>
+      <li><strong>Remove your note anytime</strong> using the private link shown when you post it (and emailed to you, if you left an email).</li>
+      <li>You can request <strong>access to</strong> or <strong>erasure of</strong> your data, or removal of a note you didn't post but that concerns you, via the contact address below. We aim to act within 72 hours.</li>
+    </ul>
+
+    <h2>Please don't post personal data</h2>
+    <p>Don't include emails, phone numbers, addresses, or ID numbers — yours or anyone else's — in a public note. The form blocks obvious cases, but please help keep the wall safe. This site isn't intended for children under 16.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or requests: <a href="mailto:tester@beforeaistealsmyjob.com">tester@beforeaistealsmyjob.com</a></p>
+
+    <a class="back" href="/">← back to the wall</a>
+  </div>
+</body>
+</html>

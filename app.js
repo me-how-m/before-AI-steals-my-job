@@ -312,6 +312,13 @@ signPost.addEventListener('click', async () => {
     renderCount();
     if (res.data.removalUrl) showRemoval(res.data.removalUrl, res.data.emailed);
     else showToast(res.data.pending ? "it's in — pending a quick review" : "it's up there now");
+  } else if (res.status === 422) {
+    // Blocked by moderation (PII / blocklist). Return the text so they can edit.
+    closeSignModal();
+    composerInput.value = text;
+    composerInput.dispatchEvent(new Event('input'));
+    setCollapsed(false);
+    showToast(res.data?.reason || "that note can't be posted", 4200);
   } else if (res.status === 429) {
     signPost.disabled = false;
     showToast("you're posting a little fast — try again in a moment");
