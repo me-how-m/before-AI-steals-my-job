@@ -5,9 +5,14 @@
 // ---- config ----
 const PROMPT = 'Before AI steals my job…';
 const BASE_COUNT = 124583;
-const FLOATER_W = 260;
-const FLOATER_GAP = 24;
-const FLOATER_H = 44;
+
+// Floater geometry + row layout adapt to the viewport: on phones the notes are
+// narrower and there are fewer, tighter rows so the drift + center-fade still read.
+function layout() {
+  if (window.innerWidth <= 600) return { W: 176, GAP: 16, H: 40, rows: 7, stride: 40 + 18, trunc: 20 };
+  return { W: 260, GAP: 24, H: 44, rows: 10, stride: 44 + 24, trunc: 30 };
+}
+let L = layout();
 
 // ---- helpers ----
 const formatPlus = (n) => {
@@ -76,9 +81,9 @@ function buildFloaters() {
   floaterEls = [];
   const vw = window.innerWidth;
   // Each note is offset by `slot/cycle * duration` so adjacent boxes are always
-  // exactly `slot = W + 24px` apart while drifting — guaranteed no-overlap.
-  const cycle = vw + FLOATER_W;
-  const slot = FLOATER_W + FLOATER_GAP;
+  // exactly `slot = W + GAP` apart while drifting — guaranteed no-overlap.
+  const cycle = vw + L.W;
+  const slot = L.W + L.GAP;
   const notesPerRow = Math.max(2, Math.floor(cycle / slot));
   ROWS.forEach((row) => {
     const stepDelay = (slot / cycle) * row.speed;
@@ -89,21 +94,29 @@ function buildFloaters() {
       btn.className = 'floater' + (openNoteId === note.id ? ' is-hidden' : '');
       btn.dataset.noteId = note.id;
       btn.style.top = `calc(50% + ${row.dyPx}px)`;
-      btn.style.width = `${FLOATER_W}px`;
-      btn.style.height = `${FLOATER_H}px`;
+      btn.style.width = `${L.W}px`;
+      btn.style.height = `${L.H}px`;
       btn.style.animationName = row.dir > 0 ? 'driftRight' : 'driftLeft';
       btn.style.animationDuration = `${row.speed}s`;
       btn.style.animationDelay = `${-(i * stepDelay)}s`;
       btn.style.opacity = '0';
       const span = document.createElement('span');
       span.className = 'floater-text';
-      span.textContent = truncate(note.text, 30);
+      span.textContent = truncate(note.text, L.trunc);
       btn.appendChild(span);
       btn.addEventListener('click', () => openNote(note.id));
       floatersEl.appendChild(btn);
       floaterEls.push(btn);
     }
   });
+}
+
+// Recompute the responsive layout and rebuild the wall (used at init + on resize,
+// since crossing the mobile breakpoint changes row count and floater size).
+function rebuild() {
+  L = layout();
+  ROWS = buildRows(wallNotes, L.rows, L.stride);
+  buildFloaters();
 }
 
 // Fade floaters in toward the horizontal center, out toward the edges.
@@ -123,8 +136,12 @@ function opacityLoop() {
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(buildFloaters, 150);
+  resizeTimer = setTimeout(rebuild, 150);
 });
+
+// On mobile the brand badge shows a short label; tap it to reveal the full line.
+const brandEl = document.querySelector('.brand');
+brandEl.addEventListener('click', () => brandEl.classList.toggle('brand--expanded'));
 
 // ---- brand counter ----
 function renderCount() {
@@ -509,7 +526,7 @@ async function loadWall() {
 
   if (data && data.configured && Array.isArray(data.wall) && data.wall.length) {
     wallNotes = data.wall;
-    ROWS = buildRows(wallNotes);
+    ROWS = buildRows(wallNotes, L.rows, L.stride);
     buildFloaters();
     if (typeof data.total === 'number') { serverTotal = data.total; renderCount(); }
     renderWidgets(data.widgets);
@@ -520,6 +537,6 @@ async function loadWall() {
 
 // ---- init ----
 renderCount();
-buildFloaters();
+rebuild();
 requestAnimationFrame(opacityLoop);
 loadWall();

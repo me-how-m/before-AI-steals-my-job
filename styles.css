@@ -128,6 +128,8 @@ body {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+.brand { cursor: default; }
+.brand-text-short { display: none; } /* desktop shows the full line */
 .brand-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
@@ -407,6 +409,7 @@ body {
   -webkit-backdrop-filter: blur(6px);
   display: flex; align-items: center; justify-content: center;
   padding: 24px;
+  overflow-y: auto;
   animation: scrimIn 200ms ease;
 }
 @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
@@ -666,7 +669,7 @@ body {
 .footer {
   position: fixed;
   bottom: 18px;
-  right: 22px;
+  right: 84px; /* clears the bottom-right feedback button */
   z-index: 60;
   display: inline-flex;
   align-items: center;
@@ -917,8 +920,28 @@ body {
 .fw-send:disabled { opacity: 0.35; cursor: not-allowed; }
 
 @media (max-width: 600px) {
-  .tw { top: 64px; right: 12px; }
+  /* Brand: short label by default, tap to expand to the full line */
+  .brand { top: 14px; left: 14px; padding: 7px 12px; cursor: pointer; max-width: calc(100vw - 84px); }
+  .brand-text-full { display: none; }
+  .brand-text-short { display: inline; }
+  .brand--expanded .brand-text-full { display: inline; }
+  .brand--expanded .brand-text-short { display: none; }
+
+  /* Trending: compact pill top-right, panel drops as a full-width sheet */
+  .tw { top: 12px; right: 12px; }
+  .tw-toggle { padding: 8px 10px; }
   .tw-toggle span:not(.tw-spark) { display: none; }
   .tw-spark { font-size: 14px; }
+  .tw-panel { position: fixed; top: 54px; left: 10px; right: 10px; width: auto; max-width: none; }
+  .tw-list { max-height: 52vh; }
+
+  /* Feedback: button bottom-right, popover becomes a bottom sheet */
   .fw { bottom: 14px; right: 14px; }
+  .fw-pop { position: fixed; left: 10px; right: 10px; bottom: 74px; width: auto; max-width: none; }
+
+  /* Footer moves left so it clears the feedback button */
+  .footer { left: 14px; right: auto; bottom: 16px; }
+
+  /* Modals anchor to the top and scroll if taller than the screen */
+  .modal-scrim, .detail-scrim { align-items: flex-start; padding: 16px; }
 }

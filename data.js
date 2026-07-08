@@ -53,23 +53,24 @@ const SAMPLE_NOTES = [
 // app.js rebuilds the rows from those instead. See buildRows() below.
 const FALLBACK_NOTES = SAMPLE_NOTES;
 
-// 10 rows, centered vertically. dyPx = pixel offset from viewport vertical center.
-// Vertical: row stride between rows (top-to-top distance) = 24px gap + 44px floater height.
+// Rows are centered vertically. dyPx = pixel offset from viewport vertical center.
+// Default stride between rows (top-to-top) = 24px gap + 44px floater height.
 const ROW_STRIDE = 24 + 44;
 
-// Build the 10-row drift layout from any array of notes (each needs an `id`).
-function buildRows(notes) {
+// Build the drift layout from any array of notes (each needs an `id`).
+// rowCount + stride are viewport-dependent (fewer, tighter rows on mobile).
+function buildRows(notes, rowCount = 10, stride = ROW_STRIDE) {
   const out = [];
-  const offsets = [-4.5, -3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5, 4.5];
   const speeds = [220, 240, 200, 260, 210, 230, 190, 250, 215, 245];
   const noteIds = (notes && notes.length ? notes : FALLBACK_NOTES).map((n) => n.id);
-  offsets.forEach((u, i) => {
+  const mid = (rowCount - 1) / 2; // centers the rows around the viewport middle
+  for (let i = 0; i < rowCount; i++) {
     const dir = (i % 2 === 0) ? 1 : -1;
     const start = (i * 4) % noteIds.length;
     const ids = [];
     for (let j = 0; j < 4; j++) ids.push(noteIds[(start + j) % noteIds.length]);
-    out.push({ dyPx: u * ROW_STRIDE, dir, speed: speeds[i], notes: ids });
-  });
+    out.push({ dyPx: (i - mid) * stride, dir, speed: speeds[i % speeds.length], notes: ids });
+  }
   return out;
 }
 
