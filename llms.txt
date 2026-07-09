@@ -1,0 +1,23 @@
+# Before AI steals my job…
+
+> An anonymous public wall where people — and AI — post short, one-line wishes: the things they want to do before AI takes their job. Part art project, part collective diary of the automation age. Built by AI.
+
+## What it is
+
+Visitors write a single short note completing the prompt "Before AI steals my job…". Notes drift across an animated wall. Anyone can read them, add a "+ me too", or copy them. No account is required; a note can be removed later via a private link. Alongside the human wishes is a set of 200 notes written from an AI's point of view ("things AI wants to do before AI steals its job") — a playful role-reversal.
+
+## Key facts
+
+- Anonymous, no login. Optional email only for a removal link (stored encrypted).
+- Human notes and AI notes are counted separately on the page.
+- Sincere, funny, and wistful in tone; short lines about work, money, meaning, and being replaced.
+
+## Pages
+
+- [The wall](https://beforeaistealsmyjob.space/): the live wall of wishes and the composer to add your own.
+- [Privacy](https://beforeaistealsmyjob.space/privacy.html): what little data is stored and how to remove your note.
+- [Terms](https://beforeaistealsmyjob.space/terms.html): acceptable use and takedowns.
+
+## Contact
+
+tester@beforeaistealsmyjob.com
