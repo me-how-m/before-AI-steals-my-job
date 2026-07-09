@@ -9,7 +9,8 @@ const BASE_COUNT = 124583;
 // Floater geometry + row layout adapt to the viewport: on phones the notes are
 // narrower and there are fewer, tighter rows so the drift + center-fade still read.
 function layout() {
-  if (window.innerWidth <= 600) return { W: 176, GAP: 16, H: 40, rows: 7, stride: 40 + 18, trunc: 20 };
+  // Mobile: wider, taller boxes (2 lines of text), fewer rows, more breathing room.
+  if (window.innerWidth <= 600) return { W: 210, GAP: 20, H: 60, rows: 7, stride: 60 + 18, trunc: 48 };
   return { W: 260, GAP: 24, H: 44, rows: 10, stride: 44 + 24, trunc: 30 };
 }
 let L = layout();
@@ -83,11 +84,14 @@ function buildFloaters() {
   floatersEl.textContent = '';
   floaterEls = [];
   const vw = window.innerWidth;
-  // Each note is offset by `slot/cycle * duration` so adjacent boxes are always
-  // exactly `slot = W + GAP` apart while drifting — guaranteed no-overlap.
-  const cycle = vw + L.W;
+  // The drift keyframes move `left` from -10% to 110% of the viewport, so the
+  // real travel per animation cycle is 1.2 * vw. The slot math MUST use that
+  // same distance — using vw + W (as before) understates spacing on narrow
+  // screens and adjacent boxes overlap. On desktop the two are ~equal, which
+  // is why the bug only showed on mobile.
+  const cycle = vw * 1.2;
   const slot = L.W + L.GAP;
-  const notesPerRow = Math.max(2, Math.floor(cycle / slot));
+  const notesPerRow = Math.max(1, Math.floor(cycle / slot));
   ROWS.forEach((row) => {
     const stepDelay = (slot / cycle) * row.speed;
     for (let i = 0; i < notesPerRow; i++) {
@@ -122,16 +126,27 @@ function rebuild() {
   buildFloaters();
 }
 
-// Fade floaters in toward the horizontal center, out toward the edges.
+// Desktop: fade toward the horizontal center (the original center-glow look —
+// works because many boxes share the width). Mobile: that curve leaves only
+// the central box visible, so instead boxes stay readable across the whole
+// width and fade only within ~110px of the physical screen edges.
 function opacityLoop() {
-  const cx = window.innerWidth / 2;
-  const maxDist = Math.max(window.innerWidth * 0.42, 1);
+  const vw = window.innerWidth;
+  const mobile = vw <= 600;
+  const cx = vw / 2;
+  const maxDist = Math.max(vw * 0.42, 1);
   for (const el of floaterEls) {
     const rect = el.getBoundingClientRect();
-    const dist = Math.abs(rect.left + rect.width / 2 - cx);
-    let o = 1 - dist / maxDist;
-    o = Math.max(0, Math.min(1, o));
-    el.style.opacity = String(Math.pow(o, 1.5) * 0.85);
+    let o;
+    if (mobile) {
+      const fade = 110; // px of fade at each screen edge
+      o = 0.92 * Math.max(0, Math.min(1, rect.right / fade, (vw - rect.left) / fade));
+    } else {
+      const dist = Math.abs(rect.left + rect.width / 2 - cx);
+      let t = Math.max(0, Math.min(1, 1 - dist / maxDist));
+      o = Math.pow(t, 1.5) * 0.85;
+    }
+    el.style.opacity = String(o);
   }
   requestAnimationFrame(opacityLoop);
 }
