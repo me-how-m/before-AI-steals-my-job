@@ -37,6 +37,12 @@ const formatTimeShort = (h) => (h < 1 ? 'now' : h < 24 ? `${h}h` : `${Math.floor
 const truncate = (s, n = 30) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 // AI-seeded notes are stored as author '200-AI-entries'; show a clean byline.
 const displayAuthor = (a) => (a === '200-AI-entries' ? 'AI' : (a || 'Anonymous'));
+const noteUrl = (id) => `https://beforeaistealsmyjob.space/n/${id}`;
+const formatDate = (secs) =>
+  new Date(secs * 1000).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
 const $ = (id) => document.getElementById(id);
 
 async function api(path, { method = 'GET', body } = {}) {
@@ -344,7 +350,7 @@ signPost.addEventListener('click', async () => {
   if (res.ok && res.data && res.data.id) {
     // Saved server-side.
     firstTypedAt = null;
-    userNotes.unshift({ id: res.data.id, text, author, hours: 0, plus: 0 });
+    userNotes.unshift({ id: res.data.id, text, author, hours: 0, plus: 0, createdAt: Math.floor(Date.now() / 1000) });
     if (serverTotal != null) serverTotal += 1;
     closeSignModal();
     renderCount();
@@ -374,7 +380,7 @@ signPost.addEventListener('click', async () => {
   } else {
     // No backend yet (503/local) or network error: keep it locally so the
     // person still feels heard. It becomes real once the DB is configured.
-    userNotes.unshift({ id: 'u' + Date.now(), text, author, hours: 0, plus: 0 });
+    userNotes.unshift({ id: 'u' + Date.now(), text, author, hours: 0, plus: 0, createdAt: Math.floor(Date.now() / 1000) });
     closeSignModal();
     renderCount();
     showToast("it's up there now");
@@ -432,6 +438,8 @@ function closeNote() {
   openNoteId = null;
   detailScrim.hidden = true;
   for (const el of floaterEls) el.classList.remove('is-hidden');
+  // Leaving a /n/<id> permalink: clean the address bar back to the wall.
+  if (location.pathname.startsWith('/n/')) history.replaceState({}, '', '/');
 }
 
 actPlus.addEventListener('click', () => {
@@ -444,9 +452,34 @@ actPlus.addEventListener('click', () => {
 actCopy.addEventListener('click', async () => {
   const note = noteById(openNoteId);
   if (!note) return;
-  try { await navigator.clipboard.writeText(`${PROMPT} ${note.text}`); } catch (_) {}
+
+  // Attributed copy: plain text everywhere, plus rich HTML (clickable link)
+  // for targets that accept it (docs, LinkedIn, Slack…). One icon, one gesture.
+  const author = displayAuthor(note.author);
+  const when = formatDate(note.createdAt || Math.floor(Date.now() / 1000) - (note.hours || 0) * 3600);
+  const url = noteUrl(note.id);
+  const shortUrl = url.replace(/^https:\/\//, '');
+  const plain = `${PROMPT}\n"${note.text}" - ${author}\n${url} · ${when}`;
+  const rich =
+    `<p>${escHtml(PROMPT)}<br>` +
+    `&ldquo;${escHtml(note.text)}&rdquo; - ${escHtml(author)}<br>` +
+    `<a href="${url}">${escHtml(shortUrl)}</a> · ${escHtml(when)}</p>`;
+
+  try {
+    if (window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/plain': new Blob([plain], { type: 'text/plain' }),
+        'text/html': new Blob([rich], { type: 'text/html' }),
+      })]);
+    } else {
+      await navigator.clipboard.writeText(plain);
+    }
+  } catch (_) {
+    try { await navigator.clipboard.writeText(plain); } catch (_) {}
+  }
+
   $('act-copy-inner').innerHTML = COPIED_ICON;
-  showToast('copied to clipboard', 2200);
+  showToast('copied with link', 2200);
   clearTimeout(copyTimer);
   copyTimer = setTimeout(() => { $('act-copy-inner').innerHTML = COPY_ICON; }, 1600);
 });
@@ -615,3 +648,10 @@ renderCount();
 rebuild();
 requestAnimationFrame(opacityLoop);
 loadWall();
+
+// Deep link (/n/<id>): the permalink page injects window.DEEP_NOTE so the
+// note opens instantly — no extra API round-trip.
+if (window.DEEP_NOTE && window.DEEP_NOTE.id) {
+  userNotes.push(window.DEEP_NOTE);
+  openNote(window.DEEP_NOTE.id);
+}

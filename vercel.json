@@ -4,7 +4,8 @@
     { "path": "/api/cron/daily", "schedule": "0 3 * * *" }
   ],
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/n/:id", "destination": "/api/note-page?id=:id" }
   ],
   "redirects": [
     {

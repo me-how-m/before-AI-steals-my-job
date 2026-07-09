@@ -77,6 +77,7 @@ const notes = (await import('../api/notes.js')).default;
 const plus = (await import('../api/plus.js')).default;
 const remove = (await import('../api/remove.js')).default;
 const admin = (await import('../api/admin.js')).default;
+const notePage = (await import('../api/note-page.js')).default;
 
 console.log('\ncrypto primitives');
 ok('email encrypt/decrypt roundtrip', decryptEmail(encryptEmail('a@b.com')) === 'a@b.com');
@@ -141,6 +142,51 @@ ok('wall drops removed note', r.body.total === 1);
 
 r = await call(remove, { method: 'GET', query: { token: 'garbage.token' } });
 ok('remove rejects bad token', r.statusCode === 400);
+
+console.log('\nnote permalinks (/n/:id)');
+r = await call(wall);
+ok('wall payload exposes createdAt', typeof r.body.wall[0].createdAt === 'number');
+
+// Monkeypatch fetch: note-page pulls the page shell over HTTP in prod.
+const realFetch = globalThis.fetch;
+globalThis.fetch = async () => ({
+  ok: true,
+  text: async () =>
+    '<html><head><title>x</title>' +
+    '<link rel="canonical" href="https://old/" />' +
+    '<meta property="og:title" content="old" />' +
+    '<meta property="og:description" content="old" />' +
+    '<meta property="og:url" content="https://old/" />' +
+    '<meta name="twitter:title" content="old" />' +
+    '<meta name="twitter:description" content="old" />' +
+    '</head><body></body></html>',
+});
+
+// A visible note with a script-breaking payload, inserted directly (bypasses API moderation on purpose).
+const seedClient = createClient({ url: process.env.TURSO_DATABASE_URL });
+await seedClient.execute({
+  sql: "INSERT INTO notes(id,text,author,email_enc,created_at,plus_total,plus_recent,status) VALUES('xssnote','</script><script>alert(1)','H4x',NULL,1750000000,0,0,'visible')",
+});
+
+r = await call(notePage, { method: 'GET', query: { id: 'xssnote' } });
+ok('note page renders 200', r.statusCode === 200 && typeof r.body === 'string');
+ok('note page CDN cache header', String(r.getHeader('Cache-Control')).includes('s-maxage=3600'));
+ok('DEEP_NOTE bootstrap injected', r.body.includes('window.DEEP_NOTE='));
+ok('script-breakout is escaped', !r.body.includes('</script><script>alert(1)') && r.body.includes('\\u003c/script'));
+ok('canonical points at /n/<id>', r.body.includes('href="https://beforeaistealsmyjob.space/n/xssnote"'));
+ok('og:title carries the note text', r.body.includes('og:title') && r.body.includes('&lt;/script&gt;'));
+
+r = await call(notePage, { method: 'GET', query: { id: 'does-not-exist' } });
+ok('unknown note 302s home', r.statusCode === 302 && r.getHeader('Location') === '/');
+r = await call(notePage, { method: 'GET', query: { id: '../etc' } });
+ok('malformed id 302s home', r.statusCode === 302);
+
+const hiddenNote = (await seedClient.execute("SELECT id FROM notes WHERE status='hidden' LIMIT 1")).rows[0];
+if (hiddenNote) {
+  r = await call(notePage, { method: 'GET', query: { id: hiddenNote.id } });
+  ok('hidden (pending) note 302s home', r.statusCode === 302);
+}
+globalThis.fetch = realFetch;
 
 console.log('\nadmin');
 r = await call(admin, { method: 'POST', query: { action: 'login' }, body: { password: 'wrong', totp: totpNow(TOTP_SECRET) } });
