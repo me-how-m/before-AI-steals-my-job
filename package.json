@@ -13,6 +13,7 @@
   "scripts": {
     "gen-secrets": "node scripts/generate-secrets.mjs",
     "init-db": "node scripts/init-db.mjs",
+    "provision": "node scripts/provision.mjs",
     "smoke": "node scripts/smoke-test.mjs"
   }
 }
