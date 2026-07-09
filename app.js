@@ -34,6 +34,8 @@ const formatTime = (hoursAgo) => {
 
 const formatTimeShort = (h) => (h < 1 ? 'now' : h < 24 ? `${h}h` : `${Math.floor(h / 24)}d`);
 const truncate = (s, n = 30) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
+// AI-seeded notes are stored as author '200-AI-entries'; show a clean byline.
+const displayAuthor = (a) => (a === '200-AI-entries' ? 'AI' : (a || 'Anonymous'));
 const $ = (id) => document.getElementById(id);
 
 async function api(path, { method = 'GET', body } = {}) {
@@ -379,7 +381,7 @@ function renderDetail() {
   const note = noteById(openNoteId);
   if (!note) return;
   $('detail-text').textContent = note.text;
-  $('detail-author').textContent = `— ${note.author || 'Anonymous'}`;
+  $('detail-author').textContent = `— ${displayAuthor(note.author)}`;
   $('detail-time').textContent = formatTime(note.hours);
   const delta = plusMap[openNoteId] || 0;
   actPlus.classList.toggle('is-on', delta > 0);
