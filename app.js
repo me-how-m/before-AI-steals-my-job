@@ -168,9 +168,9 @@ function renderCount() {
     const human = Math.max(0, serverTotal - ai);
     $('brand-count').textContent = human.toLocaleString();
     const thing = human === 1 ? 'thing' : 'things';
-    const aiBit = ai ? ` (and ${ai.toLocaleString()} AI)` : '';
+    const aiBit = ai ? ` (+ ${ai.toLocaleString()} ${ai === 1 ? 'AI' : 'AIs'})` : '';
     $('brand-text-full').textContent = ` ${thing} people${aiBit} want to do before AI steals their job`;
-    $('brand-text-short').textContent = ai ? ` (+${ai.toLocaleString()} AI)` : ' wishes';
+    $('brand-text-short').textContent = ai ? ` (+ ${ai.toLocaleString()} AIs)` : ' wishes';
   } else {
     // Offline fallback (API/DB unreachable): keep it simple.
     $('brand-count').textContent = (BASE_COUNT + userNotes.length).toLocaleString();
