@@ -158,7 +158,8 @@ await seedClient.execute({
 r = await call(notePage, { method: 'GET', query: { id: 'xssnote' } });
 ok('note page renders 200', r.statusCode === 200 && typeof r.body === 'string');
 ok('note page CDN cache header', String(r.getHeader('Cache-Control')).includes('s-maxage=3600'));
-ok('DEEP_NOTE bootstrap injected', r.body.includes('window.DEEP_NOTE='));
+ok('deep-note JSON data block injected (CSP-safe, non-executable)', r.body.includes('<script id="deep-note" type="application/json">'));
+ok('no inline executable bootstrap (would be CSP-blocked)', !r.body.includes('window.DEEP_NOTE='));
 ok('script-breakout is escaped', !r.body.includes('</script><script>alert(1)') && r.body.includes('\\u003c/script'));
 ok('canonical points at /n/<id>', r.body.includes('href="https://beforeaistealsmyjob.space/n/xssnote"'));
 ok('og:title carries the note text', r.body.includes('og:title') && r.body.includes('&lt;/script&gt;'));

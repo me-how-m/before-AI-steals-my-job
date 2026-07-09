@@ -649,9 +649,17 @@ rebuild();
 requestAnimationFrame(opacityLoop);
 loadWall();
 
-// Deep link (/n/<id>): the permalink page injects window.DEEP_NOTE so the
-// note opens instantly — no extra API round-trip.
-if (window.DEEP_NOTE && window.DEEP_NOTE.id) {
-  userNotes.push(window.DEEP_NOTE);
-  openNote(window.DEEP_NOTE.id);
-}
+// Deep link (/n/<id>): the permalink page embeds the note as an inert JSON
+// data block (CSP-safe — inline executable scripts are forbidden), so the
+// note opens instantly with no extra API round-trip.
+(() => {
+  const el = document.getElementById('deep-note');
+  if (!el) return;
+  try {
+    const dn = JSON.parse(el.textContent);
+    if (dn && dn.id && dn.text) {
+      userNotes.push(dn);
+      openNote(dn.id);
+    }
+  } catch (_) { /* malformed payload — just show the wall */ }
+})();

@@ -78,9 +78,13 @@ export default async function handler(req, res) {
   const url = `${CANONICAL_HOST}/n/${note.id}`;
 
   // All replacements use function form so note text containing $-patterns
-  // can't corrupt the output; DEEP_NOTE escapes "<" so "</script>" in a note
-  // can never break out of the bootstrap script.
-  const bootstrap = `<script>window.DEEP_NOTE=${JSON.stringify(note).replace(/</g, '\\u003c')};</script>`;
+  // can't corrupt the output. The note ships as an INERT JSON data block
+  // (type="application/json") — the CSP forbids inline executable scripts
+  // (script-src 'self'), which is exactly why an inline window.DEEP_NOTE
+  // assignment silently never ran in production. Data blocks aren't executed,
+  // so CSP doesn't apply; app.js parses it. "<" is escaped so "</script>" in
+  // a note can never terminate the element.
+  const bootstrap = `<script id="deep-note" type="application/json">${JSON.stringify(note).replace(/</g, '\\u003c')}</script>`;
   html = html
     .replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`)
     .replace(/(<link rel="canonical" href=")[^"]*(")/, (_, a, b) => a + url + b)
