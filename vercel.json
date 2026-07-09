@@ -6,6 +6,20 @@
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" }
   ],
+  "redirects": [
+    {
+      "source": "/((?!api/).*)",
+      "has": [{ "type": "host", "value": "beforeaistealsmyjob.vercel.app" }],
+      "destination": "https://beforeaistealsmyjob.space/$1",
+      "permanent": true
+    },
+    {
+      "source": "/((?!api/).*)",
+      "has": [{ "type": "host", "value": "www.beforeaistealsmyjob.space" }],
+      "destination": "https://beforeaistealsmyjob.space/$1",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
