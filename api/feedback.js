@@ -15,6 +15,9 @@ export default async function handler(req, res) {
   if (!text) return res.status(400).json({ error: 'empty' });
   if (text.length > 1000) return res.status(400).json({ error: 'too-long' });
 
+  // Honeypot — bots that fill the hidden field get a quiet fake success.
+  if (String(body.website || '').trim()) return res.status(200).json({ ok: true });
+
   const ip = clientIp(req);
   if (!(await verifyTurnstile(body.turnstileToken, ip))) {
     return res.status(403).json({ error: 'verification-failed' });

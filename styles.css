@@ -715,6 +715,28 @@ body {
 .ts-slot { margin: 4px 0 2px; min-height: 0; }
 .ts-slot:empty { display: none; }
 
+/* ---------- Honeypot (anti-bot) ---------- */
+/* Offscreen rather than display:none — some bots skip hidden fields. */
+.hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Widget freshness label ---------- */
+.tw-refreshed {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-align: right;
+}
+
 /* ---------- Trending widget (top-right) ---------- */
 .tw {
   position: fixed;

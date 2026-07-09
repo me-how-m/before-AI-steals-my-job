@@ -229,7 +229,11 @@ function setCollapsed(collapsed) {
 composerToggle.addEventListener('click', () => setCollapsed(!composer.classList.contains('is-collapsed')));
 composerHint.addEventListener('click', () => setCollapsed(false));
 
+// Time-to-submit trap: remember when the visitor first started typing.
+let firstTypedAt = null;
+
 composerInput.addEventListener('input', () => {
+  if (firstTypedAt === null && composerInput.value) firstTypedAt = Date.now();
   composerCount.textContent = `${composerInput.value.length}/240`;
   composerSubmit.disabled = !composerInput.value.trim();
 });
@@ -314,17 +318,30 @@ signPost.addEventListener('click', async () => {
   signPost.disabled = true;
   const res = await api('/api/notes', {
     method: 'POST',
-    body: { text, author, email, turnstileToken: tsTokens.sign },
+    body: {
+      text, author, email,
+      turnstileToken: tsTokens.sign,
+      elapsedMs: firstTypedAt ? Date.now() - firstTypedAt : null,
+      website: $('hp-note').value, // honeypot — humans never see it
+    },
   });
 
   if (res.ok && res.data && res.data.id) {
     // Saved server-side.
+    firstTypedAt = null;
     userNotes.unshift({ id: res.data.id, text, author, hours: 0, plus: 0 });
     if (serverTotal != null) serverTotal += 1;
     closeSignModal();
     renderCount();
     if (res.data.removalUrl) showRemoval(res.data.removalUrl, res.data.emailed);
     else showToast(res.data.pending ? "it's in — pending a quick review" : "it's up there now");
+  } else if (res.status === 409) {
+    // Someone already wrote exactly this — point them at "+ me too".
+    closeSignModal();
+    composerInput.value = text;
+    composerInput.dispatchEvent(new Event('input'));
+    setCollapsed(false);
+    showToast(res.data?.reason || 'these exact words are already on the wall', 4600);
   } else if (res.status === 422) {
     // Blocked by moderation (PII / blocklist). Return the text so they can edit.
     closeSignModal();
@@ -425,6 +442,17 @@ detailScrim.addEventListener('click', (e) => { if (e.target === detailScrim) clo
 // ---- trending widget (top-right) ----
 let widgetData = null;
 let widgetTab = 'trending';
+let wallGeneratedAt = null; // unix secs; from /api/wall for "refreshed Xm ago"
+
+function renderRefreshedAgo() {
+  const el = $('tw-refreshed');
+  if (!el) return;
+  if (!wallGeneratedAt) { el.hidden = true; return; }
+  const mins = Math.max(0, Math.floor(Date.now() / 1000 - wallGeneratedAt) / 60 | 0);
+  el.textContent = mins < 1 ? 'refreshed just now' : `refreshed ${mins} min ago`;
+  el.hidden = false;
+}
+setInterval(renderRefreshedAgo, 30_000);
 
 function fallbackWidgets() {
   const byPlus = [...FALLBACK_NOTES].sort((a, b) => b.plus - a.plus).slice(0, 10);
@@ -504,7 +532,11 @@ fwSend.addEventListener('click', async () => {
   fwSend.disabled = true;
   const res = await api('/api/feedback', {
     method: 'POST',
-    body: { text, email: fwEmail.value.trim() || null, turnstileToken: tsTokens.feedback },
+    body: {
+      text, email: fwEmail.value.trim() || null,
+      turnstileToken: tsTokens.feedback,
+      website: $('hp-feedback').value, // honeypot
+    },
   });
   if (res.ok || res.status === 503) {
     fwText.value = '';
@@ -539,21 +571,29 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ---- load live data ----
-async function loadWall() {
+// light=true refreshes counters + widgets only (no wall rebuild), so the
+// periodic refetch never visually resets the drifting notes.
+async function loadWall(light = false) {
   const res = await api('/api/wall');
   const data = res.data;
   if (data && data.config) wallConfig = data.config;
 
   if (data && data.configured && Array.isArray(data.wall) && data.wall.length) {
     wallNotes = data.wall;
-    ROWS = buildRows(wallNotes, L.rows, L.stride);
-    buildFloaters();
+    if (!light) {
+      ROWS = buildRows(wallNotes, L.rows, L.stride);
+      buildFloaters();
+    }
     if (typeof data.total === 'number') { serverTotal = data.total; serverAi = data.aiTotal || 0; renderCount(); }
+    if (typeof data.generatedAt === 'number') { wallGeneratedAt = data.generatedAt; renderRefreshedAgo(); }
     renderWidgets(data.widgets);
-  } else {
+  } else if (!light) {
     renderWidgets(fallbackWidgets());
   }
 }
+
+// Keep long-open tabs fresh: refetch every 5 min (CDN-cached — no DB cost).
+setInterval(() => loadWall(true), 300_000);
 
 // ---- init ----
 renderCount();

@@ -100,15 +100,27 @@ console.log('\npublic API');
 let r = await call(wall);
 ok('wall configured, empty', r.body.configured === true && r.body.wall.length === 0);
 
-r = await call(notes, { method: 'POST', body: { text: 'email me at a@b.com please' } });
+r = await call(notes, { method: 'POST', body: { text: 'email me at a@b.com please', elapsedMs: 5000 } });
 ok('post rejects PII with 422', r.statusCode === 422 && !!r.body.reason);
 
-r = await call(notes, { method: 'POST', body: { text: 'ship one last thing', author: 'MM', email: 'me@x.com' } });
+r = await call(notes, { method: 'POST', body: { text: 'check out spamsite.com now', elapsedMs: 5000 } });
+ok('post rejects URLs with 422', r.statusCode === 422 && !!r.body.reason);
+
+r = await call(notes, { method: 'POST', body: { text: 'bot was here', elapsedMs: 5000, website: 'http://spam.example' } });
+ok('honeypot returns fake success', r.statusCode === 200 && r.body.id === 'ok');
+
+r = await call(notes, { method: 'POST', body: { text: 'instant robo-post', elapsedMs: 120 } });
+ok('too-fast submit goes pending', r.statusCode === 200 && r.body.pending === true);
+
+r = await call(notes, { method: 'POST', body: { text: 'ship one last thing', author: 'MM', email: 'me@x.com', elapsedMs: 5000 } });
 const idA = r.body.id;
 const tokenA = new URL(r.body.removalUrl).searchParams.get('token');
 ok('note A created', r.statusCode === 200 && !!idA && !!r.body.removalUrl);
 
-r = await call(notes, { method: 'POST', body: { text: 'retire before the bots do', author: null } });
+r = await call(notes, { method: 'POST', body: { text: 'ship one last thing', elapsedMs: 5000 } });
+ok('exact duplicate rejected with 409', r.statusCode === 409 && !!r.body.reason);
+
+r = await call(notes, { method: 'POST', body: { text: 'retire before the bots do', author: null, elapsedMs: 5000 } });
 const idB = r.body.id;
 ok('note B created (anon, no email)', r.statusCode === 200 && !!idB);
 

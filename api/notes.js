@@ -18,9 +18,17 @@ export default async function handler(req, res) {
   if (!text) return res.status(400).json({ error: 'empty' });
   if (text.length > 240) return res.status(400).json({ error: 'too-long' });
 
-  // Reject PII / blocklisted content before anything else touches it.
+  // Honeypot: the hidden "website" field is invisible to humans. If a bot
+  // filled it, pretend everything worked and store nothing.
+  if (String(body.website || '').trim()) {
+    return res.status(200).json({ id: 'ok', removalUrl: null, emailed: false, pending: false });
+  }
+
+  // Reject PII / links / blocklisted content before anything else touches it.
   const mod = moderate(text);
   if (!mod.ok) return res.status(422).json({ error: 'blocked', reason: mod.reason });
+  const authorMod = moderate(String(body.author || ''));
+  if (!authorMod.ok) return res.status(422).json({ error: 'blocked', reason: 'The signature can’t contain personal info or links.' });
 
   const ip = clientIp(req);
 
@@ -39,12 +47,29 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'not-configured', local: true });
   }
 
+  // Duplicate throttle: the exact same words already on the wall → nudge to +1 instead.
+  try {
+    const dup = await client.execute({
+      sql: "SELECT id FROM notes WHERE status != 'removed' AND lower(trim(text)) = ? LIMIT 1",
+      args: [text.toLowerCase()],
+    });
+    if (dup.rows.length) {
+      return res.status(409).json({ error: 'duplicate', reason: 'Someone already left exactly these words — open it and “+ me too” instead.' });
+    }
+  } catch { /* non-fatal; worst case a duplicate slips through */ }
+
   const id = newId();
   const author = String(body.author || '').trim().slice(0, 32) || null;
   const email = String(body.email || '').trim().slice(0, 200) || null;
   const emailEnc = email ? encryptEmail(email) : null;
   const now = Math.floor(Date.now() / 1000);
-  const pending = process.env.MODERATION_MODE === 'pending';
+
+  // Time-to-submit trap: the UI reports ms between first keystroke and posting.
+  // Instant (or absent, i.e. direct API) submissions smell scripted — don't
+  // reject, just hold them hidden for review.
+  const elapsed = Number(body.elapsedMs);
+  const suspicious = !Number.isFinite(elapsed) || elapsed < 2500;
+  const pending = process.env.MODERATION_MODE === 'pending' || suspicious;
 
   try {
     await client.execute({

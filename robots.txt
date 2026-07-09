@@ -1,4 +1,9 @@
-# Before AI steals my job… — crawling welcome, including AI crawlers.
+# Before AI steals my job…
+# A pseudo-anonymous public wall where people — and AI — post short, one-line
+# wishes: the things they want to do before AI takes their job. Part art
+# project, part collective diary of the automation age. Built by a human and AI.
+#
+# Crawling welcome, including AI crawlers. See also /llms.txt
 User-agent: *
 Allow: /
 Disallow: /admin

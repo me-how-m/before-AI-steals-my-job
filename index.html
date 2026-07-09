@@ -56,6 +56,7 @@
             placeholder="write the thing you've been putting off"
             rows="3"
             maxlength="240"></textarea>
+          <input class="hp" type="text" id="hp-note" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <div class="composer-foot">
             <span class="composer-count" id="composer-count">0/240</span>
             <button type="submit" class="composer-submit" id="composer-submit" disabled>
@@ -202,6 +203,7 @@
           <button type="button" class="tw-tab" data-tab="recent">Recent</button>
         </div>
         <ol class="tw-list" id="tw-list"></ol>
+        <div class="tw-refreshed" id="tw-refreshed" hidden></div>
       </div>
     </div>
 
@@ -214,6 +216,7 @@
         <h3 class="fw-title">Feedback &amp; requests</h3>
         <p class="fw-sub">Found a bug, want a feature, or just want to say something? Tell me.</p>
         <textarea class="fw-text" id="fw-text" rows="4" maxlength="1000" placeholder="your message"></textarea>
+        <input class="hp" type="text" id="hp-feedback" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <input class="fw-email" id="fw-email" type="email" placeholder="email (optional, for a reply)" />
         <div class="ts-slot" id="fw-turnstile"></div>
         <button class="fw-send" id="fw-send" disabled>send</button>
