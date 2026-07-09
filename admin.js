@@ -55,6 +55,18 @@ function showLoginError(msg) {
   el.hidden = false;
 }
 
+// Show/hide passphrase
+$('pw-toggle').addEventListener('click', () => {
+  const inp = $('login-password');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  const btn = $('pw-toggle');
+  btn.classList.toggle('is-on', show);
+  btn.setAttribute('aria-pressed', String(show));
+  btn.setAttribute('aria-label', show ? 'Hide passphrase' : 'Show passphrase');
+  inp.focus();
+});
+
 $('logout').addEventListener('click', async () => {
   await apiPost('logout');
   dashView.hidden = true;
@@ -90,15 +102,22 @@ const pageSize = 50;
 
 const search = $('search');
 const filterStatus = $('filter-status');
+const filterSource = $('filter-source');
+const sortBy = $('sort-by');
 let searchTimer = null;
 search.addEventListener('input', () => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { page = 0; loadNotes(); updateExportLinks(); }, 250);
+  searchTimer = setTimeout(() => { page = 0; loadNotes(); }, 250);
 });
 filterStatus.addEventListener('change', () => { page = 0; loadNotes(); updateExportLinks(); });
+filterSource.addEventListener('change', () => { page = 0; loadNotes(); });
+sortBy.addEventListener('change', () => { page = 0; loadNotes(); });
 
 async function loadNotes() {
-  const res = await apiGet('list', { q: search.value.trim(), status: filterStatus.value, page: String(page) });
+  const res = await apiGet('list', {
+    q: search.value.trim(), status: filterStatus.value,
+    source: filterSource.value, sort: sortBy.value, page: String(page),
+  });
   if (res.status === 401) { dashView.hidden = true; loginView.hidden = false; return; }
   if (!res.ok) return;
   total = res.data.total;
@@ -191,12 +210,15 @@ function updateExportLinks() {
 $('export-email').addEventListener('change', updateExportLinks);
 
 // ---- feedback ----
+const feedbackFilter = $('feedback-filter');
+feedbackFilter.addEventListener('change', loadFeedback);
+
 async function loadFeedback() {
-  const res = await apiGet('feedback');
+  const res = await apiGet('feedback', { status: feedbackFilter.value });
   if (!res.ok) return;
   const list = $('feedback-list');
   const items = res.data.feedback || [];
-  if (!items.length) { list.innerHTML = '<div class="empty">No feedback yet.</div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="empty">No feedback here.</div>'; return; }
   list.innerHTML = '';
   for (const f of items) {
     const card = document.createElement('div');
@@ -217,7 +239,9 @@ async function loadFeedback() {
     const actions = document.createElement('span');
     actions.className = 'fb-actions';
     if (f.status === 'new') actions.appendChild(actionBtn('mark read', () => fbAct(f.id, 'read')));
-    actions.appendChild(actionBtn('archive', () => fbAct(f.id, 'archive')));
+    else actions.appendChild(actionBtn('mark unread', () => fbAct(f.id, 'unread')));
+    if (f.status === 'archived') actions.appendChild(actionBtn('unarchive', () => fbAct(f.id, 'read')));
+    else actions.appendChild(actionBtn('archive', () => fbAct(f.id, 'archive')));
     actions.appendChild(actionBtn('delete', () => { if (confirm('Delete this feedback?')) fbAct(f.id, 'delete'); }, 'btn-danger'));
     meta.append(dot(), actions);
     card.append(text, meta);

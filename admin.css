@@ -60,6 +60,18 @@ body {
 .login-card button:disabled { opacity: 0.5; cursor: not-allowed; }
 .login-error { color: #c0392b; font-size: 13px; margin: 12px 0 0; }
 
+/* passphrase field + show/hide toggle */
+.pw-wrap { position: relative; margin-bottom: 10px; }
+.pw-wrap input { margin-bottom: 0; padding-right: 44px; }
+.pw-toggle {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--mute); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.pw-toggle:hover { color: var(--ink); background: #f2ece4; }
+.pw-toggle.is-on { color: var(--ink); }
+
 /* ---- dashboard ---- */
 .dash { max-width: 1040px; margin: 0 auto; padding: 24px 20px 60px; }
 .dash-header {

@@ -74,7 +74,7 @@ function logout(req, res) {
 async function list(req, res) {
   const client = db();
   if (!client) return res.status(503).json({ error: 'not-configured' });
-  const { q = '', status = '', page = '0' } = getQuery(req);
+  const { q = '', status = '', source = '', sort = 'new', page = '0' } = getQuery(req);
   const limit = 50;
   const offset = Math.max(0, parseInt(page, 10) || 0) * limit;
 
@@ -84,18 +84,21 @@ async function list(req, res) {
     where.push('status = ?');
     args.push(status);
   }
+  if (source === 'ai') where.push("author = '200-AI-entries'");
+  else if (source === 'human') where.push("(author IS NULL OR author != '200-AI-entries')");
   if (q) {
     where.push('(text LIKE ? OR author LIKE ?)');
     args.push(`%${q}%`, `%${q}%`);
   }
   const clause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const orderBy = sort === 'old' ? 'created_at ASC' : sort === 'plus' ? 'plus_total DESC' : 'created_at DESC';
 
   try {
     const rows = await client.execute({
       sql:
         `SELECT id, text, author, created_at, plus_total, status, ` +
         `CASE WHEN email_enc IS NOT NULL THEN 1 ELSE 0 END AS has_email ` +
-        `FROM notes ${clause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        `FROM notes ${clause} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
       args: [...args, limit, offset],
     });
     const total = await client.execute({ sql: `SELECT COUNT(*) AS n FROM notes ${clause}`, args });
@@ -236,9 +239,15 @@ async function exportData(req, res) {
 async function feedbackList(req, res) {
   const client = db();
   if (!client) return res.status(503).json({ error: 'not-configured' });
+  const filter = getQuery(req).status || 'active';
+  const clause = filter === 'new' ? "WHERE status = 'new'"
+    : filter === 'read' ? "WHERE status = 'read'"
+    : filter === 'archived' ? "WHERE status = 'archived'"
+    : filter === 'all' ? ''
+    : "WHERE status != 'archived'"; // 'active' = new + read (default)
   try {
     const r = await client.execute(
-      "SELECT id, text, email, created_at, status FROM feedback WHERE status != 'archived' ORDER BY created_at DESC LIMIT 200"
+      `SELECT id, text, email, created_at, status FROM feedback ${clause} ORDER BY created_at DESC LIMIT 200`
     );
     return res.status(200).json({
       feedback: r.rows.map((f) => ({
@@ -260,7 +269,7 @@ async function feedbackAct(req, res) {
   if (!client) return res.status(503).json({ error: 'not-configured' });
   const { id, op } = await getBody(req);
   if (!id) return res.status(400).json({ error: 'missing-id' });
-  const map = { read: "status='read'", archive: "status='archived'" };
+  const map = { read: "status='read'", unread: "status='new'", archive: "status='archived'" };
   try {
     if (op === 'delete') {
       await client.execute({ sql: 'DELETE FROM feedback WHERE id=?', args: [id] });

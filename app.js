@@ -58,6 +58,7 @@ let widgetNotes = [];                   // notes referenced by the widget lists
 let userNotes = [];                     // notes this visitor just posted
 let wallConfig = null;                  // { turnstileSiteKey }
 let serverTotal = null;                 // visible count from the server
+let serverAi = 0;                       // how many of those are AI-authored
 let openNoteId = null;
 const plusMap = {};
 let draftText = '';
@@ -145,8 +146,18 @@ brandEl.addEventListener('click', () => brandEl.classList.toggle('brand--expande
 
 // ---- brand counter ----
 function renderCount() {
-  const n = serverTotal != null ? BASE_COUNT + serverTotal : BASE_COUNT + userNotes.length;
-  $('brand-count').textContent = n.toLocaleString();
+  if (serverTotal != null) {
+    const ai = serverAi || 0;
+    const human = Math.max(0, serverTotal - ai);
+    $('brand-count').textContent = human.toLocaleString();
+    const thing = human === 1 ? 'thing' : 'things';
+    const aiBit = ai ? ` (and ${ai.toLocaleString()} AI)` : '';
+    $('brand-text-full').textContent = ` ${thing} people${aiBit} want to do before AI steals their job`;
+    $('brand-text-short').textContent = ai ? ` (+${ai.toLocaleString()} AI)` : ' wishes';
+  } else {
+    // Offline fallback (API/DB unreachable): keep it simple.
+    $('brand-count').textContent = (BASE_COUNT + userNotes.length).toLocaleString();
+  }
 }
 
 // ---- toast ----
@@ -535,7 +546,7 @@ async function loadWall() {
     wallNotes = data.wall;
     ROWS = buildRows(wallNotes, L.rows, L.stride);
     buildFloaters();
-    if (typeof data.total === 'number') { serverTotal = data.total; renderCount(); }
+    if (typeof data.total === 'number') { serverTotal = data.total; serverAi = data.aiTotal || 0; renderCount(); }
     renderWidgets(data.widgets);
   } else {
     renderWidgets(fallbackWidgets());

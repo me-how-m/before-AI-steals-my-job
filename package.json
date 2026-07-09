@@ -14,6 +14,7 @@
     "gen-secrets": "node scripts/generate-secrets.mjs",
     "init-db": "node scripts/init-db.mjs",
     "provision": "node scripts/provision.mjs",
+    "seed-ai": "node scripts/seed-ai.mjs",
     "smoke": "node scripts/smoke-test.mjs"
   }
 }

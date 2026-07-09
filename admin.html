@@ -13,7 +13,12 @@
     <form id="login-form" class="login-card">
       <h1>Admin</h1>
       <p class="login-hint">Passphrase + authenticator code.</p>
-      <input id="login-password" type="password" autocomplete="current-password" placeholder="passphrase" />
+      <div class="pw-wrap">
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="passphrase" />
+        <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Show passphrase" aria-pressed="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
       <input id="login-totp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code" />
       <button type="submit" id="login-btn">Sign in</button>
       <p id="login-error" class="login-error" hidden></p>
@@ -38,6 +43,16 @@
           <option value="hidden">hidden</option>
           <option value="removed">removed</option>
         </select>
+        <select id="filter-source" class="input">
+          <option value="">everyone</option>
+          <option value="human">people only</option>
+          <option value="ai">AI only</option>
+        </select>
+        <select id="sort-by" class="input">
+          <option value="new">newest</option>
+          <option value="old">oldest</option>
+          <option value="plus">most +</option>
+        </select>
         <span class="spacer"></span>
         <span class="exports">
           <span class="exports-label">export</span>
@@ -59,7 +74,17 @@
     </section>
 
     <section class="panel">
-      <h2 class="panel-title">Feedback inbox</h2>
+      <div class="toolbar">
+        <h2 class="panel-title" style="margin:0">Feedback inbox</h2>
+        <span class="spacer"></span>
+        <select id="feedback-filter" class="input">
+          <option value="active">new &amp; read</option>
+          <option value="new">new only</option>
+          <option value="read">read only</option>
+          <option value="archived">archived</option>
+          <option value="all">all</option>
+        </select>
+      </div>
       <div id="feedback-list" class="feedback-list"></div>
     </section>
   </div>
