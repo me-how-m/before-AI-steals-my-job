@@ -73,6 +73,20 @@ $('logout').addEventListener('click', async () => {
   loginView.hidden = false;
 });
 
+// ---- hamburger menu ----
+const menuBtn = $('menu-btn');
+const menuPop = $('menu-pop');
+function setMenu(open) {
+  menuPop.hidden = !open;
+  menuBtn.setAttribute('aria-expanded', String(open));
+}
+menuBtn.addEventListener('click', (e) => { e.stopPropagation(); setMenu(menuPop.hidden); });
+menuPop.addEventListener('click', () => setMenu(false));          // any item click closes it
+document.addEventListener('click', (e) => {
+  if (!menuPop.hidden && !menuPop.contains(e.target) && e.target !== menuBtn) setMenu(false);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+
 async function showDash() {
   loginView.hidden = true;
   dashView.hidden = false;
