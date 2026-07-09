@@ -3,6 +3,9 @@
   "crons": [
     { "path": "/api/cron/daily", "schedule": "0 3 * * *" }
   ],
+  "functions": {
+    "api/note-page.js": { "includeFiles": "index.html" }
+  },
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/n/:id", "destination": "/api/note-page?id=:id" }

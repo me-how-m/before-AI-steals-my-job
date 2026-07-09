@@ -11,10 +11,37 @@
 // so a viral link costs ~1 origin hit per hour, not per visitor. Unknown,
 // hidden, or removed notes 302 to the wall (also briefly cached).
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { db } from '../lib/db.js';
 import { getQuery, escapeHtml } from '../lib/http.js';
 
 const CANONICAL_HOST = 'https://beforeaistealsmyjob.space';
+
+// The page shell is bundled with the function (vercel.json includeFiles) and
+// read from disk — no network dependency. The old self-fetch could fail
+// transiently, and that failure used to get CACHED as a redirect for 5 min,
+// which is exactly how a healthy permalink "didn't work" for a user. A fetch
+// fallback remains for exotic runtimes; failures are never cached now.
+let shellMemo = null;
+function shellFromDisk() {
+  if (shellMemo) return shellMemo;
+  try {
+    shellMemo = fs.readFileSync(path.join(process.cwd(), 'index.html'), 'utf8');
+    return shellMemo;
+  } catch {
+    return null;
+  }
+}
+async function shellFromCdn(req) {
+  try {
+    const base = process.env.SITE_URL || `https://${req.headers.host}`;
+    const r = await fetch(`${base}/index.html`);
+    return r.ok ? await r.text() : null;
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   const id = String(getQuery(req).id || '').trim();
@@ -33,16 +60,9 @@ export default async function handler(req, res) {
   }
   if (!row) return redirectHome(res);
 
-  // The static shell, served by the CDN (cheap even on cache miss here).
-  let html;
-  try {
-    const base = process.env.SITE_URL || `https://${req.headers.host}`;
-    const shell = await fetch(`${base}/index.html`);
-    if (!shell.ok) return redirectHome(res);
-    html = await shell.text();
-  } catch {
-    return redirectHome(res);
-  }
+  // The static shell: bundled file first, CDN fetch as a fallback.
+  let html = shellFromDisk() || (await shellFromCdn(req));
+  if (!html) return redirectHome(res);
 
   const note = {
     id: row.id,
@@ -79,6 +99,8 @@ export default async function handler(req, res) {
 function redirectHome(res) {
   res.statusCode = 302;
   res.setHeader('Location', '/');
-  res.setHeader('Cache-Control', 'public, s-maxage=300');
+  // Never cache: a redirect can be a transient failure (DB hiccup), and a
+  // cached one turns a 1-second blip into 5 minutes of "the link is broken".
+  res.setHeader('Cache-Control', 'no-store');
   return res.end();
 }

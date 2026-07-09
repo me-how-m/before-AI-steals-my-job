@@ -147,21 +147,8 @@ console.log('\nnote permalinks (/n/:id)');
 r = await call(wall);
 ok('wall payload exposes createdAt', typeof r.body.wall[0].createdAt === 'number');
 
-// Monkeypatch fetch: note-page pulls the page shell over HTTP in prod.
-const realFetch = globalThis.fetch;
-globalThis.fetch = async () => ({
-  ok: true,
-  text: async () =>
-    '<html><head><title>x</title>' +
-    '<link rel="canonical" href="https://old/" />' +
-    '<meta property="og:title" content="old" />' +
-    '<meta property="og:description" content="old" />' +
-    '<meta property="og:url" content="https://old/" />' +
-    '<meta name="twitter:title" content="old" />' +
-    '<meta name="twitter:description" content="old" />' +
-    '</head><body></body></html>',
-});
-
+// note-page reads the real index.html from disk (bundled via includeFiles in
+// prod, cwd locally) — so this exercises the exact production shell.
 // A visible note with a script-breaking payload, inserted directly (bypasses API moderation on purpose).
 const seedClient = createClient({ url: process.env.TURSO_DATABASE_URL });
 await seedClient.execute({
@@ -176,8 +163,11 @@ ok('script-breakout is escaped', !r.body.includes('</script><script>alert(1)') &
 ok('canonical points at /n/<id>', r.body.includes('href="https://beforeaistealsmyjob.space/n/xssnote"'));
 ok('og:title carries the note text', r.body.includes('og:title') && r.body.includes('&lt;/script&gt;'));
 
+ok('note page uses absolute asset paths', r.body.includes('href="/styles.css"') && r.body.includes('src="/app.js"'));
+
 r = await call(notePage, { method: 'GET', query: { id: 'does-not-exist' } });
 ok('unknown note 302s home', r.statusCode === 302 && r.getHeader('Location') === '/');
+ok('redirects are never cached', String(r.getHeader('Cache-Control')) === 'no-store');
 r = await call(notePage, { method: 'GET', query: { id: '../etc' } });
 ok('malformed id 302s home', r.statusCode === 302);
 
@@ -186,7 +176,6 @@ if (hiddenNote) {
   r = await call(notePage, { method: 'GET', query: { id: hiddenNote.id } });
   ok('hidden (pending) note 302s home', r.statusCode === 302);
 }
-globalThis.fetch = realFetch;
 
 console.log('\nadmin');
 r = await call(admin, { method: 'POST', query: { action: 'login' }, body: { password: 'wrong', totp: totpNow(TOTP_SECRET) } });
